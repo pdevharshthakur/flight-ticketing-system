@@ -1,12 +1,15 @@
 {
   "name": "flight-ticketing-system",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "build": "turbo build",
+    "clean": "turbo clean",
+    "clean:all": "turbo clean:all && rm -rf node_modules pnpm-lock.yaml",
     "dev": "turbo dev",
     "lint": "turbo lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "format": "turbo format",
+    "format:check": "turbo format:check"
   },
   "devDependencies": {
     "@workspace/eslint-config": "workspace:*",

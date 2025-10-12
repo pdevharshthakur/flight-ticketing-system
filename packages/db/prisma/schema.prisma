@@ -1,0 +1,112 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Enums for type safety and data consistency
+enum FlightStatus {
+  SCHEDULED
+  BOARDING
+  DEPARTED
+  ARRIVED
+  DELAYED
+  CANCELLED
+}
+
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  PENDING
+  REFUNDED
+}
+
+// Airport model - Simple airport information for flight search
+model Airport {
+  id      String @id @default(cuid())
+  code    String @unique // IATA code like "DEL", "BOM"
+  name    String
+  city    String
+  country String @default("India")
+
+  // Relations
+  departureFlights Flight[] @relation("DepartureAirport")
+  arrivalFlights   Flight[] @relation("ArrivalAirport")
+
+  @@map("airports")
+}
+
+// Airline model - Simple airline information for flight search
+model Airline {
+  id   String @id @default(cuid())
+  code String @unique // IATA code like "AI", "6E"
+  name String
+
+  // Relations
+  flights Flight[]
+
+  @@map("airlines")
+}
+
+// Flight model - Core flight information for search and booking
+model Flight {
+  id             String       @id @default(cuid())
+  flightNumber   String // e.g., "AI101"
+  airlineId      String
+  departureId    String
+  arrivalId      String
+  departureTime  DateTime
+  arrivalTime    DateTime
+  price          Float // Price in INR
+  availableSeats Int // Number of available seats
+  status         FlightStatus @default(SCHEDULED)
+
+  // Relations
+  airline   Airline   @relation(fields: [airlineId], references: [id])
+  departure Airport   @relation("DepartureAirport", fields: [departureId], references: [id])
+  arrival   Airport   @relation("ArrivalAirport", fields: [arrivalId], references: [id])
+  bookings  Booking[]
+
+  @@map("flights")
+}
+
+// User model - Simple user information for booking history
+model User {
+  id        String  @id @default(cuid())
+  email     String  @unique
+  firstName String
+  lastName  String
+  phone     String?
+
+  // Relations
+  bookings Booking[]
+
+  @@map("users")
+}
+
+// Booking model - Flight booking information and history
+model Booking {
+  id             String        @id @default(cuid())
+  userId         String
+  flightId       String
+  bookingRef     String        @unique // e.g., "BK123456"
+  status         BookingStatus @default(CONFIRMED)
+  totalPrice     Float
+  bookingDate    DateTime      @default(now())
+  passengerCount Int           @default(1) // Number of passengers
+  seatNumbers    String? // e.g., "12A,12B" for multiple seats
+
+  // Relations
+  user   User   @relation(fields: [userId], references: [id])
+  flight Flight @relation(fields: [flightId], references: [id])
+
+  @@map("bookings")
+}
