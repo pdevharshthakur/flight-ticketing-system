@@ -1,4 +1,4 @@
-import { IsString, IsDateString } from 'class-validator';
+import { IsString, IsOptional } from 'class-validator';
 
 export class SearchFlightsDto {
 	@IsString()
@@ -7,8 +7,9 @@ export class SearchFlightsDto {
 	@IsString()
 	to: string;
 
-	@IsDateString()
-	date: string;
+	@IsOptional()
+	@IsString()
+	date?: string;
 }
 
 export class FlightResponseDto {

@@ -6,31 +6,51 @@ import { FlightResponseDto } from './search.dto';
 export class SearchService {
 	constructor(private readonly prisma: PrismaService) {}
 
-	async searchFlights(from: string, to: string, date: string): Promise<FlightResponseDto[]> {
-		// Parse the date to get start and end of day
-		const searchDate = new Date(date);
-		const startOfDay = new Date(searchDate);
-		startOfDay.setHours(0, 0, 0, 0);
+	async searchFlights(from: string, to: string, date?: string): Promise<FlightResponseDto[]> {
+		// Build where clause - if date is provided, filter by date, otherwise show all future flights
+		const whereClause: any = {
+			departure: {
+				code: from.toUpperCase(),
+			},
+			arrival: {
+				code: to.toUpperCase(),
+			},
+			status: {
+				not: 'CANCELLED',
+			},
+		};
 
-		const endOfDay = new Date(searchDate);
-		endOfDay.setHours(23, 59, 59, 999);
+		// Only add date filter if a valid date is provided
+		if (date && date.trim() !== '') {
+			const searchDate = new Date(date);
 
-		const flights = await this.prisma.flight.findMany({
-			where: {
-				departure: {
-					code: from.toUpperCase(),
-				},
-				arrival: {
-					code: to.toUpperCase(),
-				},
-				departureTime: {
+			// Check if the date is valid
+			if (!isNaN(searchDate.getTime())) {
+				const startOfDay = new Date(searchDate);
+				startOfDay.setHours(0, 0, 0, 0);
+
+				const endOfDay = new Date(searchDate);
+				endOfDay.setHours(23, 59, 59, 999);
+
+				whereClause.departureTime = {
 					gte: startOfDay,
 					lte: endOfDay,
-				},
-				status: {
-					not: 'CANCELLED',
-				},
-			},
+				};
+			} else {
+				// If invalid date, show all future flights
+				whereClause.departureTime = {
+					gte: new Date(),
+				};
+			}
+		} else {
+			// If no date provided, show all future flights
+			whereClause.departureTime = {
+				gte: new Date(),
+			};
+		}
+
+		const flights = await this.prisma.flight.findMany({
+			where: whereClause,
 			include: {
 				airline: true,
 				departure: true,

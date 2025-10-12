@@ -49,23 +49,32 @@ export default function ResultsPage() {
   useEffect(() => {
     if (validated.ok && validated.data) {
       const { from, to, date } = validated.data;
+      console.log("useEffect triggered with validated data:", { from, to, date });
       fetchFlights(from, to, date);
     } else if (!validated.ok) {
+      console.log("Validation failed");
       setLoading(false);
     }
-  }, [validated]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [validated.ok, validated.data]);
 
   const fetchFlights = async (from: string, to: string, date: string) => {
     try {
       setLoading(true);
       setError(null);
+      console.log("Fetching flights:", { from, to, date });
+      console.log("API baseURL:", api.defaults.baseURL);
       const response = await api.get("/search/flights", {
         params: { from, to, date },
       });
+      console.log("API Response:", response.data);
       setFlights(response.data);
     } catch (err) {
       setError("Failed to fetch flights. Please try again.");
       console.error("Error fetching flights:", err);
+      if (err instanceof Error) {
+        console.error("Error message:", err.message);
+      }
     } finally {
       setLoading(false);
     }

@@ -1,17 +1,19 @@
 /**
  * Flight Ticketing System - Database Seed Script
  *
- * This script generates mock data for the flight ticketing system.
- * It creates airports, airlines, and flights for testing flight search functionality.
+ * This script generates known test data for the flight ticketing system.
+ * It creates airports, airlines, specific flights, and a test user with bookings
+ * for testing flight search and "My Trips" functionality.
  *
- * Note: This script assumes users are already logged in, so no user data is generated.
+ * Test User: test@example.com
+ * - Has 4 confirmed upcoming bookings
+ * - Bookings are for predictable flights with known details
  *
  * @author Flight Ticketing System Team
- * @version 1.0.0
+ * @version 2.0.0
  */
 
 import { PrismaClient, FlightStatus, BookingStatus } from "../generated/prisma/index.js";
-import { faker } from "@faker-js/faker";
 
 // Initialize Prisma client for database operations
 const prisma = new PrismaClient();
@@ -68,134 +70,6 @@ const AIRLINES: AirlineData[] = [
 ];
 
 /**
- * Helper functions for generating realistic flight data
- * These functions use Faker.js to create realistic mock data
- */
-
-/**
- * Generates realistic flight departure and arrival times
- *
- * @returns Object containing departure and arrival Date objects
- *
- * Features:
- * - Departure times spread over next 2 years (2025-2027)
- * - Flight times between 5 AM and 11 PM
- * - Minutes rounded to quarters (0, 15, 30, 45)
- * - Flight duration between 1-8 hours
- */
-function generateFlightTime(): { departure: Date; arrival: Date } {
-  // Generate departure time for 2025 and beyond (next 2 years)
-  const departure = faker.date.future({ years: 2 });
-
-  // Set realistic departure hours (5 AM to 11 PM)
-  departure.setHours(
-    faker.number.int({ min: 5, max: 23 }),
-    faker.helpers.arrayElement([0, 15, 30, 45]), // Quarter-hour intervals
-    0,
-    0,
-  );
-
-  // Generate flight duration between 1-8 hours (60-480 minutes)
-  const duration = faker.number.int({ min: 60, max: 480 });
-  const arrival = new Date(departure.getTime() + duration * 60000);
-
-  return { departure, arrival };
-}
-
-/**
- * Generates Indian phone numbers with realistic prefixes
- *
- * @returns Formatted Indian phone number string
- */
-function generateIndianPhone(): string {
-  const prefixes = ["9876", "9875", "9874", "9873", "9872", "9871", "9870", "9869", "9868", "9867"];
-  const prefix = faker.helpers.arrayElement(prefixes);
-  const suffix = faker.string.numeric(6);
-  return `+91-${prefix}${suffix}`;
-}
-
-/**
- * Generates Indian names for realistic user data
- *
- * @returns Object containing firstName and lastName
- */
-function generateIndianName(): { firstName: string; lastName: string } {
-  const firstNames = [
-    "Aarav",
-    "Arjun",
-    "Vikram",
-    "Rahul",
-    "Suresh",
-    "Rajesh",
-    "Kumar",
-    "Amit",
-    "Ravi",
-    "Priya",
-    "Anita",
-    "Sunita",
-    "Kavita",
-    "Rekha",
-    "Meera",
-    "Sita",
-    "Gita",
-    "Rita",
-    "Neha",
-  ];
-  const lastNames = [
-    "Sharma",
-    "Verma",
-    "Gupta",
-    "Singh",
-    "Kumar",
-    "Patel",
-    "Jain",
-    "Agarwal",
-    "Malhotra",
-    "Chopra",
-    "Reddy",
-    "Nair",
-    "Iyer",
-    "Menon",
-    "Pillai",
-    "Rao",
-    "Naidu",
-    "Gowda",
-    "Shetty",
-    "Bhat",
-  ];
-
-  return {
-    firstName: faker.helpers.arrayElement(firstNames),
-    lastName: faker.helpers.arrayElement(lastNames),
-  };
-}
-
-/**
- * Generates unique booking reference numbers
- *
- * @returns Unique booking reference string
- */
-function generateBookingRef(): string {
-  return `BK${faker.string.alphanumeric(8).toUpperCase()}`;
-}
-
-/**
- * Generates seat numbers for bookings
- *
- * @param passengerCount Number of passengers
- * @returns Comma-separated seat numbers string
- */
-function generateSeatNumbers(passengerCount: number): string {
-  const seats = [];
-  for (let i = 0; i < passengerCount; i++) {
-    const row = faker.number.int({ min: 1, max: 30 });
-    const letter = faker.helpers.arrayElement(["A", "B", "C", "D", "E", "F"]);
-    seats.push(`${row}${letter}`);
-  }
-  return seats.join(",");
-}
-
-/**
  * Main seed function
  *
  * This function orchestrates the entire seeding process:
@@ -250,118 +124,232 @@ async function main() {
     ),
   );
 
-  // Step 4: Create Flights
-  // Generates realistic flights with random routes, times, and pricing
-  console.log("🛫 Creating flights...");
+  // Step 4: Create Known Flights
+  // Creates specific, predictable flights for testing
+  console.log("🛫 Creating known flights...");
   const flights: Flight[] = [];
-  const flightCount = 150; // Generate 150 flights for better search results
 
-  for (let i = 0; i < flightCount; i++) {
-    // Randomly select airline and airports for this flight
-    const airline: Airline = faker.helpers.arrayElement(airlines);
-    const departureAirport: Airport = faker.helpers.arrayElement(airports);
+  // Helper function to create dates for next week and next month
+  const getNextWeekDate = (dayOffset: number, hour: number, minute: number = 0) => {
+    const date = new Date();
+    date.setDate(date.getDate() + 7 + dayOffset);
+    date.setHours(hour, minute, 0, 0);
+    return date;
+  };
 
-    // Ensure arrival airport is different from departure airport
-    const arrivalAirport: Airport = faker.helpers.arrayElement(
-      airports.filter((airport) => airport.id !== departureAirport.id),
-    );
+  const getNextMonthDate = (dayOffset: number, hour: number, minute: number = 0) => {
+    const date = new Date();
+    date.setMonth(date.getMonth() + 1);
+    date.setDate(date.getDate() + dayOffset);
+    date.setHours(hour, minute, 0, 0);
+    return date;
+  };
 
-    // Generate realistic flight timing
-    const { departure, arrival } = generateFlightTime();
+  // Define specific flights with known data
+  const flightData = [
+    // Next week flights
+    {
+      flightNumber: "AI101",
+      airlineCode: "AI",
+      departureCode: "DEL",
+      arrivalCode: "BOM",
+      departureTime: getNextWeekDate(1, 9, 0), // Monday 9:00 AM
+      arrivalTime: getNextWeekDate(1, 11, 30), // Monday 11:30 AM
+      price: 5000,
+      availableSeats: 120,
+    },
+    {
+      flightNumber: "6E202",
+      airlineCode: "6E",
+      departureCode: "BOM",
+      arrivalCode: "BLR",
+      departureTime: getNextWeekDate(2, 14, 0), // Tuesday 2:00 PM
+      arrivalTime: getNextWeekDate(2, 16, 15), // Tuesday 4:15 PM
+      price: 8000,
+      availableSeats: 150,
+    },
+    {
+      flightNumber: "SG303",
+      airlineCode: "SG",
+      departureCode: "BLR",
+      arrivalCode: "MAA",
+      departureTime: getNextWeekDate(3, 18, 0), // Wednesday 6:00 PM
+      arrivalTime: getNextWeekDate(3, 19, 30), // Wednesday 7:30 PM
+      price: 3500,
+      availableSeats: 80,
+    },
+    {
+      flightNumber: "UK404",
+      airlineCode: "UK",
+      departureCode: "MAA",
+      arrivalCode: "HYD",
+      departureTime: getNextWeekDate(4, 10, 30), // Thursday 10:30 AM
+      arrivalTime: getNextWeekDate(4, 12, 0), // Thursday 12:00 PM
+      price: 4500,
+      availableSeats: 100,
+    },
+    {
+      flightNumber: "AI505",
+      airlineCode: "AI",
+      departureCode: "HYD",
+      arrivalCode: "CCU",
+      departureTime: getNextWeekDate(5, 15, 0), // Friday 3:00 PM
+      arrivalTime: getNextWeekDate(5, 17, 45), // Friday 5:45 PM
+      price: 12000,
+      availableSeats: 90,
+    },
+    // Next month flights
+    {
+      flightNumber: "6E606",
+      airlineCode: "6E",
+      departureCode: "CCU",
+      arrivalCode: "AMD",
+      departureTime: getNextMonthDate(1, 8, 0), // 1st of next month 8:00 AM
+      arrivalTime: getNextMonthDate(1, 10, 30), // 1st of next month 10:30 AM
+      price: 7000,
+      availableSeats: 140,
+    },
+    {
+      flightNumber: "SG707",
+      airlineCode: "SG",
+      departureCode: "AMD",
+      arrivalCode: "PNQ",
+      departureTime: getNextMonthDate(2, 13, 0), // 2nd of next month 1:00 PM
+      arrivalTime: getNextMonthDate(2, 14, 15), // 2nd of next month 2:15 PM
+      price: 4000,
+      availableSeats: 75,
+    },
+    {
+      flightNumber: "UK808",
+      airlineCode: "UK",
+      departureCode: "PNQ",
+      arrivalCode: "COK",
+      departureTime: getNextMonthDate(3, 16, 30), // 3rd of next month 4:30 PM
+      arrivalTime: getNextMonthDate(3, 18, 45), // 3rd of next month 6:45 PM
+      price: 9000,
+      availableSeats: 110,
+    },
+    {
+      flightNumber: "AI909",
+      airlineCode: "AI",
+      departureCode: "COK",
+      arrivalCode: "GOI",
+      departureTime: getNextMonthDate(4, 11, 0), // 4th of next month 11:00 AM
+      arrivalTime: getNextMonthDate(4, 12, 30), // 4th of next month 12:30 PM
+      price: 6000,
+      availableSeats: 95,
+    },
+    {
+      flightNumber: "6E1010",
+      airlineCode: "6E",
+      departureCode: "GOI",
+      arrivalCode: "DEL",
+      departureTime: getNextMonthDate(5, 19, 0), // 5th of next month 7:00 PM
+      arrivalTime: getNextMonthDate(5, 21, 30), // 5th of next month 9:30 PM
+      price: 11000,
+      availableSeats: 160,
+    },
+  ];
 
-    // Generate realistic pricing (₹3,000 - ₹20,000)
-    const price = faker.number.float({ min: 3000, max: 20000, fractionDigits: 2 });
+  // Create flights from the defined data
+  for (const flightInfo of flightData) {
+    const airline = airlines.find((a) => a.code === flightInfo.airlineCode);
+    const departureAirport = airports.find((a) => a.code === flightInfo.departureCode);
+    const arrivalAirport = airports.find((a) => a.code === flightInfo.arrivalCode);
 
-    // Generate available seats (5-180 seats)
-    const availableSeats = faker.number.int({ min: 5, max: 180 });
-
-    // Create flight record in database
-    const flight: Flight = await prisma.flight.create({
-      data: {
-        flightNumber: `${airline.code}${faker.number.int({ min: 100, max: 9999 })}`,
-        airlineId: airline.id,
-        departureId: departureAirport.id,
-        arrivalId: arrivalAirport.id,
-        departureTime: departure,
-        arrivalTime: arrival,
-        price,
-        availableSeats,
-        // 75% scheduled, 25% delayed for realistic data
-        status: faker.helpers.arrayElement([
-          FlightStatus.SCHEDULED,
-          FlightStatus.SCHEDULED,
-          FlightStatus.SCHEDULED,
-          FlightStatus.DELAYED,
-        ]),
-      },
-    });
-
-    flights.push(flight);
-  }
-
-  // Step 5: Create Users
-  // Creates users for booking functionality
-  console.log("👥 Creating users...");
-  const users: User[] = [];
-  const userCount = 30;
-
-  for (let i = 0; i < userCount; i++) {
-    const { firstName, lastName } = generateIndianName();
-
-    const user: User = await prisma.user.create({
-      data: {
-        email: faker.internet.email({ firstName, lastName }).toLowerCase(),
-        firstName,
-        lastName,
-        phone: generateIndianPhone(),
-      },
-    });
-
-    users.push(user);
-  }
-
-  // Step 6: Create Bookings
-  // Generates realistic booking history
-  console.log("🎫 Creating bookings...");
-  const bookingCount = 80;
-
-  for (let i = 0; i < bookingCount; i++) {
-    const flight: Flight = faker.helpers.arrayElement(flights);
-    const user: User = faker.helpers.arrayElement(users);
-
-    // Only create booking if flight has available seats
-    if (flight.availableSeats > 0) {
-      const passengerCount = faker.number.int({ min: 1, max: 4 }); // 1-4 passengers
-      const totalPrice = flight.price * passengerCount;
-      const seatNumbers = generateSeatNumbers(passengerCount);
-
-      const booking: Booking = await prisma.booking.create({
+    if (airline && departureAirport && arrivalAirport) {
+      const flight: Flight = await prisma.flight.create({
         data: {
-          userId: user.id,
-          flightId: flight.id,
-          bookingRef: generateBookingRef(),
-          status: faker.helpers.arrayElement([
-            BookingStatus.CONFIRMED,
-            BookingStatus.CONFIRMED,
-            BookingStatus.CONFIRMED,
-            BookingStatus.CANCELLED,
-            BookingStatus.COMPLETED,
-          ]),
-          totalPrice,
-          bookingDate: faker.date.recent({ days: 30 }), // Bookings from last month
-          passengerCount,
-          seatNumbers,
+          flightNumber: flightInfo.flightNumber,
+          airlineId: airline.id,
+          departureId: departureAirport.id,
+          arrivalId: arrivalAirport.id,
+          departureTime: flightInfo.departureTime,
+          arrivalTime: flightInfo.arrivalTime,
+          price: flightInfo.price,
+          availableSeats: flightInfo.availableSeats,
+          status: FlightStatus.SCHEDULED,
         },
       });
 
-      // Decrease available seats if booking is confirmed
-      if (booking.status === BookingStatus.CONFIRMED) {
-        await prisma.flight.update({
-          where: { id: flight.id },
-          data: { availableSeats: Math.max(0, flight.availableSeats - passengerCount) },
-        });
-      }
+      flights.push(flight);
     }
+  }
+
+  // Step 5: Create Test User
+  // Creates a single test user for booking functionality
+  console.log("👥 Creating test user...");
+  const testUser: User = await prisma.user.create({
+    data: {
+      email: "test@example.com",
+      firstName: "Test",
+      lastName: "User",
+      phone: "+91-9876543210",
+    },
+  });
+
+  // Step 6: Create Test Bookings
+  // Creates 3-4 confirmed upcoming bookings for the test user
+  console.log("🎫 Creating test bookings...");
+
+  // Create bookings for the first 4 flights (all upcoming)
+  const testBookings = [
+    {
+      flightIndex: 0, // AI101 - Delhi to Mumbai
+      passengerCount: 1,
+      seatNumbers: "12A",
+      bookingRef: "BK00000001",
+    },
+    {
+      flightIndex: 1, // 6E202 - Mumbai to Bangalore
+      passengerCount: 2,
+      seatNumbers: "15B,15C",
+      bookingRef: "BK00000002",
+    },
+    {
+      flightIndex: 2, // SG303 - Bangalore to Chennai
+      passengerCount: 1,
+      seatNumbers: "8D",
+      bookingRef: "BK00000003",
+    },
+    {
+      flightIndex: 3, // UK404 - Chennai to Hyderabad
+      passengerCount: 2,
+      seatNumbers: "20A,20B",
+      bookingRef: "BK00000004",
+    },
+  ];
+
+  for (const bookingInfo of testBookings) {
+    const flight = flights[bookingInfo.flightIndex];
+
+    if (!flight) {
+      console.warn(
+        `Flight at index ${bookingInfo.flightIndex} not found, skipping booking ${bookingInfo.bookingRef}`,
+      );
+      continue;
+    }
+
+    const totalPrice = flight.price * bookingInfo.passengerCount;
+
+    const booking: Booking = await prisma.booking.create({
+      data: {
+        userId: testUser.id,
+        flightId: flight.id,
+        bookingRef: bookingInfo.bookingRef,
+        status: BookingStatus.CONFIRMED,
+        totalPrice,
+        bookingDate: new Date(), // Booked today
+        passengerCount: bookingInfo.passengerCount,
+        seatNumbers: bookingInfo.seatNumbers,
+      },
+    });
+
+    // Decrease available seats for the flight
+    await prisma.flight.update({
+      where: { id: flight.id },
+      data: { availableSeats: Math.max(0, flight.availableSeats - bookingInfo.passengerCount) },
+    });
   }
 
   // Step 7: Display completion summary
@@ -370,10 +358,11 @@ async function main() {
   console.log(`   - ${airports.length} airports`);
   console.log(`   - ${airlines.length} airlines`);
   console.log(`   - ${flights.length} flights`);
-  console.log(`   - ${users.length} users`);
-  console.log(`   - ${bookingCount} bookings`);
+  console.log(`   - 1 test user (test@example.com)`);
+  console.log(`   - ${testBookings.length} test bookings`);
   console.log("\n🎯 Ready for flight search and booking functionality!");
-  console.log("📋 Booking history and user data included");
+  console.log("📋 Test user has bookings for 'My Trips' testing");
+  console.log("🔑 Test user email: test@example.com");
 }
 
 /**
