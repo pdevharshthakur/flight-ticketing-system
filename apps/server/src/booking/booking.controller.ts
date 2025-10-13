@@ -1,6 +1,7 @@
-import { Controller, Get, Query, ValidationPipe } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { BookingService } from './booking.service';
-import { GetBookingsDto, BookingResponseDto } from './dto/booking.dto';
+import { BookingResponseDto, type GetBookings, GetBookingsSchema } from './dto/booking.dto';
+import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 
 @Controller('bookings')
 export class BookingController {
@@ -8,7 +9,7 @@ export class BookingController {
 
 	@Get()
 	async getBookings(
-		@Query(new ValidationPipe({ transform: true })) query: GetBookingsDto,
+		@Query(new ZodValidationPipe(GetBookingsSchema)) query: GetBookings,
 	): Promise<BookingResponseDto[]> {
 		return this.bookingService.getBookingsByEmail(query.email);
 	}
