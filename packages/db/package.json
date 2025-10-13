@@ -15,6 +15,7 @@
     "db:deploy": "prisma migrate deploy",
     "db:seed": "prisma generate && ts-node --esm prisma/seed.ts",
     "db:reset": "prisma migrate reset --force && pnpm db:seed",
+    "reset": "pnpm db:reset",
     "db:studio": "prisma studio",
     "format": "prettier --write . && prisma format",
     "format:check": "prettier --check . && prisma format --check"
