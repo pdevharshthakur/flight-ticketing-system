@@ -1,17 +1,11 @@
-import { IsString, IsDateString, Matches } from 'class-validator';
+import { z } from '../../common/pipes/zod-validation.pipe';
 
-export class SearchFlightsDto {
-	@IsString()
-	@Matches(/^[A-Z]{3}$/, { message: 'From airport code must be 3 uppercase letters' })
-	from: string;
-
-	@IsString()
-	@Matches(/^[A-Z]{3}$/, { message: 'To airport code must be 3 uppercase letters' })
-	to: string;
-
-	@IsDateString()
-	date: string; // Format: YYYY-MM-DD
-}
+export const SearchFlightsSchemaV2 = z.object({
+	from: z.string().regex(/^[A-Z]{3}$/),
+	to: z.string().regex(/^[A-Z]{3}$/),
+	date: z.string(),
+});
+export type SearchFlightsV2 = z.infer<typeof SearchFlightsSchemaV2>;
 
 export class FlightSearchResultDto {
 	id: string;

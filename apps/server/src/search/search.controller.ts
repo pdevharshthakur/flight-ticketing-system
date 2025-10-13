@@ -1,6 +1,7 @@
-import { Controller, Get, Query, ValidationPipe } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { SearchService } from './search.service';
-import { SearchFlightsDto, FlightResponseDto } from './search.dto';
+import { FlightResponseDto, type SearchFlights, SearchFlightsSchema } from './search.dto';
+import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 
 @Controller('search')
 export class SearchController {
@@ -8,7 +9,7 @@ export class SearchController {
 
 	@Get('flights')
 	async searchFlights(
-		@Query(new ValidationPipe({ transform: true })) query: SearchFlightsDto,
+		@Query(new ZodValidationPipe(SearchFlightsSchema)) query: SearchFlights,
 	): Promise<FlightResponseDto[]> {
 		return this.searchService.searchFlights(query.from, query.to, query.date);
 	}

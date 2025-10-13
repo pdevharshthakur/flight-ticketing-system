@@ -1,16 +1,11 @@
-import { IsString, IsOptional } from 'class-validator';
+import { z } from '../common/pipes/zod-validation.pipe';
 
-export class SearchFlightsDto {
-	@IsString()
-	from: string;
-
-	@IsString()
-	to: string;
-
-	@IsOptional()
-	@IsString()
-	date?: string;
-}
+export const SearchFlightsSchema = z.object({
+	from: z.string().min(1),
+	to: z.string().min(1),
+	date: z.string().optional(),
+});
+export type SearchFlights = z.infer<typeof SearchFlightsSchema>;
 
 export class FlightResponseDto {
 	id: string;

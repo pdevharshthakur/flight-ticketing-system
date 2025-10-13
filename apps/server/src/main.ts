@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { ZodExceptionFilter } from './common/filters/zod-exception.filter';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -11,8 +12,8 @@ async function bootstrap() {
 		credentials: true,
 	});
 
-	// Enable global validation pipe
-	app.useGlobalPipes(new ValidationPipe({ transform: true }));
+	// Remove class-validator ValidationPipe; use Zod at parameter level and global error filter
+	app.useGlobalFilters(new ZodExceptionFilter());
 
 	await app.listen(3001);
 }

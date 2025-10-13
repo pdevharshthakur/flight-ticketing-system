@@ -1,9 +1,9 @@
-import { IsEmail, IsOptional } from 'class-validator';
+import { z } from '../../common/pipes/zod-validation.pipe';
 
-export class GetBookingsDto {
-	@IsEmail()
-	email: string;
-}
+export const GetBookingsSchema = z.object({
+	email: z.string().email(),
+});
+export type GetBookings = z.infer<typeof GetBookingsSchema>;
 
 export class BookingResponseDto {
 	id: string;

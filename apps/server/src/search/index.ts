@@ -1,4 +1,5 @@
 export { SearchModule } from './search.module';
 export { SearchService } from './search.service';
 export { SearchController } from './search.controller';
-export { SearchFlightsDto, FlightResponseDto } from './search.dto';
+export { FlightResponseDto, SearchFlightsSchema } from './search.dto';
+export type { SearchFlights } from './search.dto';
