@@ -9,7 +9,8 @@
     "dev": "turbo dev",
     "lint": "turbo lint",
     "format": "turbo format",
-    "format:check": "turbo format:check"
+    "format:check": "turbo format:check",
+    "reset": "turbo run reset"
   },
   "devDependencies": {
     "@workspace/eslint-config": "workspace:*",

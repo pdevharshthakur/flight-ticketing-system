@@ -10,6 +10,7 @@ import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import { Badge } from "@workspace/ui/components/badge";
 import { api } from "@/lib/api";
+import { useCallback } from "react";
 import { Flight } from "@/types/flight";
 
 type ValidParams = {
@@ -24,6 +25,14 @@ export default function ResultsPage() {
   const [flights, setFlights] = useState<Flight[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [bookingFlightId, setBookingFlightId] = useState<string | null>(null);
+  const onBook = useCallback(
+    (flightId: string) => {
+      setBookingFlightId(flightId);
+      router.push(`/book/processing?flightId=${encodeURIComponent(flightId)}&count=1`);
+    },
+    [router],
+  );
 
   // Simplified validation
   const validated = useMemo(() => {
@@ -199,12 +208,21 @@ export default function ResultsPage() {
                       <span className="text-muted-foreground">
                         {flight.availableSeats} seats available
                       </span>
-                      <Badge
-                        variant={flight.status === "on-time" ? "default" : "destructive"}
-                        className="text-xs"
-                      >
-                        {flight.status}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant={flight.status === "on-time" ? "default" : "destructive"}
+                          className="text-xs"
+                        >
+                          {flight.status}
+                        </Badge>
+                        <Button
+                          size="sm"
+                          onClick={() => onBook(flight.id)}
+                          disabled={bookingFlightId === flight.id}
+                        >
+                          {bookingFlightId === flight.id ? "Booking..." : "Book"}
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </CardContent>

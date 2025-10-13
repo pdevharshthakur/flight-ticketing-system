@@ -295,12 +295,6 @@ async function main() {
   // Create bookings for the first 4 flights (all upcoming)
   const testBookings = [
     {
-      flightIndex: 0, // AI101 - Delhi to Mumbai
-      passengerCount: 1,
-      seatNumbers: "12A",
-      bookingRef: "BK00000001",
-    },
-    {
       flightIndex: 1, // 6E202 - Mumbai to Bangalore
       passengerCount: 2,
       seatNumbers: "15B,15C",
@@ -319,8 +313,7 @@ async function main() {
       bookingRef: "BK00000004",
     },
   ];
-
-  for (const bookingInfo of testBookings) {
+  for (const [i, bookingInfo] of testBookings.entries()) {
     const flight = flights[bookingInfo.flightIndex];
 
     if (!flight) {
@@ -337,9 +330,9 @@ async function main() {
         userId: testUser.id,
         flightId: flight.id,
         bookingRef: bookingInfo.bookingRef,
-        status: BookingStatus.CONFIRMED,
+        status: BookingStatus.COMPLETED,
         totalPrice,
-        bookingDate: new Date(), // Booked today
+        bookingDate: new Date(Date.now() - (i + 1) * 24 * 60 * 60 * 1000), // Past dates
         passengerCount: bookingInfo.passengerCount,
         seatNumbers: bookingInfo.seatNumbers,
       },

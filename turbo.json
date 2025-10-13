@@ -41,5 +41,11 @@
     "db:deploy": {
       "cache": false
     }
+    ,
+    "reset": {
+      "cache": false,
+      "dependsOn": ["^reset"],
+      "env": ["DATABASE_URL"]
+    }
   }
 }
