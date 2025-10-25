@@ -1,6 +1,6 @@
 # Demo: Search and Book a Flight
 
-This guide shows a clean, repeatable demo of searching and booking a flight from DEL → BOM on 20 Oct 2025.
+This guide shows a clean, repeatable demo of searching and booking flights using the December 2025 flight data.
 
 ## 1) Reset and seed the project
 
@@ -35,12 +35,41 @@ Ensure `NEXT_PUBLIC_API_URL` in the web app points to the API (defaults to `http
 
 ## 3) Run the search
 
-Open the web app and go to Search. Use:
-- From: `DEL`
-- To: `BOM`
-- Date: `2025-10-20`
+Open the web app and go to Search. Here are successful search examples:
 
-Submit the search. You should see matching flights with price and availability.
+### Popular Routes with Multiple Options:
+
+#### **DEL → BOM (Multiple flights available)**
+- From: `DEL`
+- To: `BOM` 
+- Date: `2025-12-01`
+- **Expected:** 2 flights (AI1201 at 6:00 AM, 6E1202 at 9:00 AM)
+
+#### **BOM → BLR (Multiple flights available)**
+- From: `BOM`
+- To: `BLR`
+- Date: `2025-12-15` 
+- **Expected:** 1 flight (6E1222 at 9:00 AM)
+
+#### **BLR → MAA (Multiple flights available)**
+- From: `BLR`
+- To: `MAA`
+- Date: `2025-12-22`
+- **Expected:** 1 flight (SG1233 at 2:00 PM)
+
+### Other Successful Search Dates:
+- **December 1, 2025:** DEL→BOM, BOM→BLR, BLR→MAA, MAA→HYD, HYD→CCU
+- **December 5, 2025:** HYD→CCU, CCU→AMD, AMD→PNQ, PNQ→COK, COK→GOI
+- **December 8, 2025:** GOI→DEL, DEL→BLR, BLR→MAA, MAA→HYD, HYD→CCU
+- **December 12, 2025:** CCU→AMD, AMD→PNQ, PNQ→COK, COK→GOI, GOI→DEL
+- **December 15, 2025:** DEL→BOM, BOM→BLR, BLR→MAA, MAA→HYD, HYD→CCU
+- **December 18, 2025:** CCU→AMD, AMD→PNQ, PNQ→COK, COK→GOI, GOI→DEL
+- **December 22, 2025:** DEL→BOM, BOM→BLR, BLR→MAA, MAA→HYD, HYD→CCU
+- **December 25, 2025:** CCU→AMD, AMD→PNQ, PNQ→COK, COK→GOI, GOI→DEL
+- **December 28, 2025:** DEL→BOM, BOM→BLR, BLR→MAA, MAA→HYD, HYD→CCU
+- **December 31, 2025:** CCU→AMD, AMD→PNQ, PNQ→COK, COK→GOI, GOI→DEL
+
+Submit any of these searches. You should see matching flights with price and availability.
 
 ## 4) Book a flight (demo)
 
@@ -51,6 +80,9 @@ Click the "Book" button on any result:
 Notes:
 - Bookings are stored under the demo user: `test@example.com`.
 - Seats and reference are generated for demonstration.
+- The seed data includes 50 flights across 10 December dates (Dec 1, 5, 8, 12, 15, 18, 22, 25, 28, 31).
+- Each date has 5 flights with different routes, airlines, and times.
+- Popular routes like DEL→BOM appear multiple times with different airlines and departure times.
 
 ## 5) Verify in My Trips
 

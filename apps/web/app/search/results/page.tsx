@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useEffect, useState } from "react";
+import { useMemo, useEffect, useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { format, parseISO, isValid as isValidDate } from "date-fns";
 import { ArrowLeft } from "lucide-react";
@@ -10,7 +10,6 @@ import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import { Badge } from "@workspace/ui/components/badge";
 import { api } from "@/lib/api";
-import { useCallback } from "react";
 import { Flight } from "@/types/flight";
 
 type ValidParams = {
@@ -20,6 +19,7 @@ type ValidParams = {
 };
 
 export default function ResultsPage() {
+  console.log("ResultsPage component is rendering");
   const params = useSearchParams();
   const router = useRouter();
   const [flights, setFlights] = useState<Flight[]>([]);
@@ -55,19 +55,7 @@ export default function ResultsPage() {
     };
   }, [params]);
 
-  useEffect(() => {
-    if (validated.ok && validated.data) {
-      const { from, to, date } = validated.data;
-      console.log("useEffect triggered with validated data:", { from, to, date });
-      fetchFlights(from, to, date);
-    } else if (!validated.ok) {
-      console.log("Validation failed");
-      setLoading(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [validated.ok, validated.data]);
-
-  const fetchFlights = async (from: string, to: string, date: string) => {
+  const fetchFlights = useCallback(async (from: string, to: string, date: string) => {
     try {
       setLoading(true);
       setError(null);
@@ -87,7 +75,18 @@ export default function ResultsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (validated.ok && validated.data) {
+      const { from, to, date } = validated.data;
+      console.log("useEffect triggered with validated data:", { from, to, date });
+      fetchFlights(from, to, date);
+    } else if (!validated.ok) {
+      console.log("Validation failed");
+      setLoading(false);
+    }
+  }, [validated.ok, validated.data, fetchFlights]);
 
   if (!validated.ok) {
     return (

@@ -13,7 +13,7 @@ CREATE TABLE "airlines" (
     "code" TEXT NOT NULL,
     "name" TEXT NOT NULL
 );
-
+ 
 -- CreateTable
 CREATE TABLE "flights" (
     "id" TEXT NOT NULL PRIMARY KEY,
