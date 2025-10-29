@@ -13,7 +13,7 @@
  * @version 2.0.0
  */
 
-import { PrismaClient, FlightStatus, BookingStatus } from "../generated/prisma/index.js";
+import { PrismaClient, FlightStatus } from "../generated/prisma/index.js";
 
 // Initialize Prisma client for database operations
 const prisma = new PrismaClient();
@@ -35,8 +35,7 @@ type AirlineData = {
 type Airport = Awaited<ReturnType<typeof prisma.airport.create>>;
 type Airline = Awaited<ReturnType<typeof prisma.airline.create>>;
 type Flight = Awaited<ReturnType<typeof prisma.flight.create>>;
-type User = Awaited<ReturnType<typeof prisma.user.create>>;
-type Booking = Awaited<ReturnType<typeof prisma.booking.create>>;
+// Removed User/Booking seeding for clean-slate flight data
 
 /**
  * Seed data constants
@@ -124,606 +123,112 @@ async function main() {
     ),
   );
 
-  // Step 4: Create Known Flights
-  // Creates specific, predictable flights for testing
-  console.log("🛫 Creating known flights...");
+  // Step 4: Generate Flights for December 2025 (clean-slate)
+  console.log("🛫 Generating flights for December 2025...");
   const flights: Flight[] = [];
 
-  // Fixed dates for testing - using specific dates in December 2025
-  const FIXED_DATES = {
-    // December 1, 2025
-    DEC1_6AM: new Date("2025-12-01T06:00:00Z"),
-    DEC1_9AM: new Date("2025-12-01T09:00:00Z"),
-    DEC1_2PM: new Date("2025-12-01T14:00:00Z"),
-    DEC1_6PM: new Date("2025-12-01T18:00:00Z"),
-    DEC1_9PM: new Date("2025-12-01T21:00:00Z"),
-
-    // December 5, 2025
-    DEC5_6AM: new Date("2025-12-05T06:00:00Z"),
-    DEC5_9AM: new Date("2025-12-05T09:00:00Z"),
-    DEC5_2PM: new Date("2025-12-05T14:00:00Z"),
-    DEC5_6PM: new Date("2025-12-05T18:00:00Z"),
-    DEC5_9PM: new Date("2025-12-05T21:00:00Z"),
-
-    // December 8, 2025
-    DEC8_6AM: new Date("2025-12-08T06:00:00Z"),
-    DEC8_9AM: new Date("2025-12-08T09:00:00Z"),
-    DEC8_2PM: new Date("2025-12-08T14:00:00Z"),
-    DEC8_6PM: new Date("2025-12-08T18:00:00Z"),
-    DEC8_9PM: new Date("2025-12-08T21:00:00Z"),
-
-    // December 12, 2025
-    DEC12_6AM: new Date("2025-12-12T06:00:00Z"),
-    DEC12_9AM: new Date("2025-12-12T09:00:00Z"),
-    DEC12_2PM: new Date("2025-12-12T14:00:00Z"),
-    DEC12_6PM: new Date("2025-12-12T18:00:00Z"),
-    DEC12_9PM: new Date("2025-12-12T21:00:00Z"),
-
-    // December 15, 2025
-    DEC15_6AM: new Date("2025-12-15T06:00:00Z"),
-    DEC15_9AM: new Date("2025-12-15T09:00:00Z"),
-    DEC15_2PM: new Date("2025-12-15T14:00:00Z"),
-    DEC15_6PM: new Date("2025-12-15T18:00:00Z"),
-    DEC15_9PM: new Date("2025-12-15T21:00:00Z"),
-
-    // December 18, 2025
-    DEC18_6AM: new Date("2025-12-18T06:00:00Z"),
-    DEC18_9AM: new Date("2025-12-18T09:00:00Z"),
-    DEC18_2PM: new Date("2025-12-18T14:00:00Z"),
-    DEC18_6PM: new Date("2025-12-18T18:00:00Z"),
-    DEC18_9PM: new Date("2025-12-18T21:00:00Z"),
-
-    // December 22, 2025
-    DEC22_6AM: new Date("2025-12-22T06:00:00Z"),
-    DEC22_9AM: new Date("2025-12-22T09:00:00Z"),
-    DEC22_2PM: new Date("2025-12-22T14:00:00Z"),
-    DEC22_6PM: new Date("2025-12-22T18:00:00Z"),
-    DEC22_9PM: new Date("2025-12-22T21:00:00Z"),
-
-    // December 25, 2025
-    DEC25_6AM: new Date("2025-12-25T06:00:00Z"),
-    DEC25_9AM: new Date("2025-12-25T09:00:00Z"),
-    DEC25_2PM: new Date("2025-12-25T14:00:00Z"),
-    DEC25_6PM: new Date("2025-12-25T18:00:00Z"),
-    DEC25_9PM: new Date("2025-12-25T21:00:00Z"),
-
-    // December 28, 2025
-    DEC28_6AM: new Date("2025-12-28T06:00:00Z"),
-    DEC28_9AM: new Date("2025-12-28T09:00:00Z"),
-    DEC28_2PM: new Date("2025-12-28T14:00:00Z"),
-    DEC28_6PM: new Date("2025-12-28T18:00:00Z"),
-    DEC28_9PM: new Date("2025-12-28T21:00:00Z"),
-
-    // December 31, 2025
-    DEC31_6AM: new Date("2025-12-31T06:00:00Z"),
-    DEC31_9AM: new Date("2025-12-31T09:00:00Z"),
-    DEC31_2PM: new Date("2025-12-31T14:00:00Z"),
-    DEC31_6PM: new Date("2025-12-31T18:00:00Z"),
-    DEC31_9PM: new Date("2025-12-31T21:00:00Z"),
+  type FlightSeed = {
+    flightNumber: string;
+    airlineCode: string;
+    departureCode: string;
+    arrivalCode: string;
+    departureTime: Date;
+    arrivalTime: Date;
+    price: number;
+    availableSeats: number;
   };
 
-  // Define specific flights with known data - December 2025
-  const flightData = [
-    // December 1, 2025 - 5 flights
-    {
-      flightNumber: "AI1201",
-      airlineCode: "AI",
-      departureCode: "DEL",
-      arrivalCode: "BOM",
-      departureTime: FIXED_DATES.DEC1_6AM,
-      arrivalTime: new Date("2025-12-01T08:30:00Z"),
-      price: 4500,
-      availableSeats: 120,
-    },
-    {
-      flightNumber: "6E1202",
-      airlineCode: "6E",
-      departureCode: "DEL",
-      arrivalCode: "BOM",
-      departureTime: FIXED_DATES.DEC1_9AM,
-      arrivalTime: new Date("2025-12-01T11:30:00Z"),
-      price: 5200,
-      availableSeats: 150,
-    },
-    {
-      flightNumber: "SG1203",
-      airlineCode: "SG",
-      departureCode: "BOM",
-      arrivalCode: "BLR",
-      departureTime: FIXED_DATES.DEC1_2PM,
-      arrivalTime: new Date("2025-12-01T16:15:00Z"),
-      price: 3800,
-      availableSeats: 85,
-    },
-    {
-      flightNumber: "UK1204",
-      airlineCode: "UK",
-      departureCode: "BLR",
-      arrivalCode: "MAA",
-      departureTime: FIXED_DATES.DEC1_6PM,
-      arrivalTime: new Date("2025-12-01T19:30:00Z"),
-      price: 4200,
-      availableSeats: 100,
-    },
-    {
-      flightNumber: "IX1205",
-      airlineCode: "IX",
-      departureCode: "MAA",
-      arrivalCode: "HYD",
-      departureTime: FIXED_DATES.DEC1_9PM,
-      arrivalTime: new Date("2025-12-01T22:45:00Z"),
-      price: 3500,
-      availableSeats: 75,
-    },
+  const flightData: FlightSeed[] = [];
 
-    // December 5, 2025 - 5 flights
-    {
-      flightNumber: "AI1206",
-      airlineCode: "AI",
-      departureCode: "HYD",
-      arrivalCode: "CCU",
-      departureTime: FIXED_DATES.DEC5_6AM,
-      arrivalTime: new Date("2025-12-05T08:30:00Z"),
-      price: 4800,
-      availableSeats: 110,
-    },
-    {
-      flightNumber: "6E1207",
-      airlineCode: "6E",
-      departureCode: "CCU",
-      arrivalCode: "AMD",
-      departureTime: FIXED_DATES.DEC5_9AM,
-      arrivalTime: new Date("2025-12-05T11:30:00Z"),
-      price: 4200,
-      availableSeats: 140,
-    },
-    {
-      flightNumber: "SG1208",
-      airlineCode: "SG",
-      departureCode: "AMD",
-      arrivalCode: "PNQ",
-      departureTime: FIXED_DATES.DEC5_2PM,
-      arrivalTime: new Date("2025-12-05T15:15:00Z"),
-      price: 3200,
-      availableSeats: 80,
-    },
-    {
-      flightNumber: "UK1209",
-      airlineCode: "UK",
-      departureCode: "PNQ",
-      arrivalCode: "COK",
-      departureTime: FIXED_DATES.DEC5_6PM,
-      arrivalTime: new Date("2025-12-05T19:45:00Z"),
-      price: 6800,
-      availableSeats: 95,
-    },
-    {
-      flightNumber: "G81210",
-      airlineCode: "G8",
-      departureCode: "COK",
-      arrivalCode: "GOI",
-      departureTime: FIXED_DATES.DEC5_9PM,
-      arrivalTime: new Date("2025-12-05T22:30:00Z"),
-      price: 4500,
-      availableSeats: 90,
-    },
-
-    // December 8, 2025 - 5 flights
-    {
-      flightNumber: "AI1211",
-      airlineCode: "AI",
-      departureCode: "GOI",
-      arrivalCode: "DEL",
-      departureTime: FIXED_DATES.DEC8_6AM,
-      arrivalTime: new Date("2025-12-08T08:30:00Z"),
-      price: 5500,
-      availableSeats: 125,
-    },
-    {
-      flightNumber: "6E1212",
-      airlineCode: "6E",
-      departureCode: "DEL",
-      arrivalCode: "BLR",
-      departureTime: FIXED_DATES.DEC8_9AM,
-      arrivalTime: new Date("2025-12-08T12:30:00Z"),
-      price: 7200,
-      availableSeats: 160,
-    },
-    {
-      flightNumber: "SG1213",
-      airlineCode: "SG",
-      departureCode: "BLR",
-      arrivalCode: "MAA",
-      departureTime: FIXED_DATES.DEC8_2PM,
-      arrivalTime: new Date("2025-12-08T16:15:00Z"),
-      price: 3800,
-      availableSeats: 85,
-    },
-    {
-      flightNumber: "UK1214",
-      airlineCode: "UK",
-      departureCode: "MAA",
-      arrivalCode: "HYD",
-      departureTime: FIXED_DATES.DEC8_6PM,
-      arrivalTime: new Date("2025-12-08T19:45:00Z"),
-      price: 4200,
-      availableSeats: 100,
-    },
-    {
-      flightNumber: "IX1215",
-      airlineCode: "IX",
-      departureCode: "HYD",
-      arrivalCode: "CCU",
-      departureTime: FIXED_DATES.DEC8_9PM,
-      arrivalTime: new Date("2025-12-08T23:15:00Z"),
-      price: 3600,
-      availableSeats: 70,
-    },
-
-    // December 12, 2025 - 5 flights
-    {
-      flightNumber: "AI1216",
-      airlineCode: "AI",
-      departureCode: "CCU",
-      arrivalCode: "AMD",
-      departureTime: FIXED_DATES.DEC12_6AM,
-      arrivalTime: new Date("2025-12-12T08:30:00Z"),
-      price: 4800,
-      availableSeats: 115,
-    },
-    {
-      flightNumber: "6E1217",
-      airlineCode: "6E",
-      departureCode: "AMD",
-      arrivalCode: "PNQ",
-      departureTime: FIXED_DATES.DEC12_9AM,
-      arrivalTime: new Date("2025-12-12T11:30:00Z"),
-      price: 3500,
-      availableSeats: 145,
-    },
-    {
-      flightNumber: "SG1218",
-      airlineCode: "SG",
-      departureCode: "PNQ",
-      arrivalCode: "COK",
-      departureTime: FIXED_DATES.DEC12_2PM,
-      arrivalTime: new Date("2025-12-12T16:15:00Z"),
-      price: 4200,
-      availableSeats: 80,
-    },
-    {
-      flightNumber: "UK1219",
-      airlineCode: "UK",
-      departureCode: "COK",
-      arrivalCode: "GOI",
-      departureTime: FIXED_DATES.DEC12_6PM,
-      arrivalTime: new Date("2025-12-12T19:30:00Z"),
-      price: 3800,
-      availableSeats: 95,
-    },
-    {
-      flightNumber: "G81220",
-      airlineCode: "G8",
-      departureCode: "GOI",
-      arrivalCode: "DEL",
-      departureTime: FIXED_DATES.DEC12_9PM,
-      arrivalTime: new Date("2025-12-12T22:45:00Z"),
-      price: 5200,
-      availableSeats: 105,
-    },
-
-    // December 15, 2025 - 5 flights
-    {
-      flightNumber: "AI1221",
-      airlineCode: "AI",
-      departureCode: "DEL",
-      arrivalCode: "BOM",
-      departureTime: FIXED_DATES.DEC15_6AM,
-      arrivalTime: new Date("2025-12-15T08:30:00Z"),
-      price: 4800,
-      availableSeats: 130,
-    },
-    {
-      flightNumber: "6E1222",
-      airlineCode: "6E",
-      departureCode: "BOM",
-      arrivalCode: "BLR",
-      departureTime: FIXED_DATES.DEC15_9AM,
-      arrivalTime: new Date("2025-12-15T12:30:00Z"),
-      price: 6500,
-      availableSeats: 155,
-    },
-    {
-      flightNumber: "SG1223",
-      airlineCode: "SG",
-      departureCode: "BLR",
-      arrivalCode: "MAA",
-      departureTime: FIXED_DATES.DEC15_2PM,
-      arrivalTime: new Date("2025-12-15T16:15:00Z"),
-      price: 3600,
-      availableSeats: 85,
-    },
-    {
-      flightNumber: "UK1224",
-      airlineCode: "UK",
-      departureCode: "MAA",
-      arrivalCode: "HYD",
-      departureTime: FIXED_DATES.DEC15_6PM,
-      arrivalTime: new Date("2025-12-15T19:45:00Z"),
-      price: 4200,
-      availableSeats: 100,
-    },
-    {
-      flightNumber: "IX1225",
-      airlineCode: "IX",
-      departureCode: "HYD",
-      arrivalCode: "CCU",
-      departureTime: FIXED_DATES.DEC15_9PM,
-      arrivalTime: new Date("2025-12-15T23:15:00Z"),
-      price: 3800,
-      availableSeats: 75,
-    },
-
-    // December 18, 2025 - 5 flights
-    {
-      flightNumber: "AI1226",
-      airlineCode: "AI",
-      departureCode: "CCU",
-      arrivalCode: "AMD",
-      departureTime: FIXED_DATES.DEC18_6AM,
-      arrivalTime: new Date("2025-12-18T08:30:00Z"),
-      price: 5200,
-      availableSeats: 120,
-    },
-    {
-      flightNumber: "6E1227",
-      airlineCode: "6E",
-      departureCode: "AMD",
-      arrivalCode: "PNQ",
-      departureTime: FIXED_DATES.DEC18_9AM,
-      arrivalTime: new Date("2025-12-18T11:30:00Z"),
-      price: 3800,
-      availableSeats: 150,
-    },
-    {
-      flightNumber: "SG1228",
-      airlineCode: "SG",
-      departureCode: "PNQ",
-      arrivalCode: "COK",
-      departureTime: FIXED_DATES.DEC18_2PM,
-      arrivalTime: new Date("2025-12-18T16:15:00Z"),
-      price: 4500,
-      availableSeats: 80,
-    },
-    {
-      flightNumber: "UK1229",
-      airlineCode: "UK",
-      departureCode: "COK",
-      arrivalCode: "GOI",
-      departureTime: FIXED_DATES.DEC18_6PM,
-      arrivalTime: new Date("2025-12-18T19:30:00Z"),
-      price: 4200,
-      availableSeats: 95,
-    },
-    {
-      flightNumber: "G81230",
-      airlineCode: "G8",
-      departureCode: "GOI",
-      arrivalCode: "DEL",
-      departureTime: FIXED_DATES.DEC18_9PM,
-      arrivalTime: new Date("2025-12-18T22:45:00Z"),
-      price: 5500,
-      availableSeats: 110,
-    },
-
-    // December 22, 2025 - 5 flights
-    {
-      flightNumber: "AI1231",
-      airlineCode: "AI",
-      departureCode: "DEL",
-      arrivalCode: "BOM",
-      departureTime: FIXED_DATES.DEC22_6AM,
-      arrivalTime: new Date("2025-12-22T08:30:00Z"),
-      price: 5200,
-      availableSeats: 135,
-    },
-    {
-      flightNumber: "6E1232",
-      airlineCode: "6E",
-      departureCode: "BOM",
-      arrivalCode: "BLR",
-      departureTime: FIXED_DATES.DEC22_9AM,
-      arrivalTime: new Date("2025-12-22T12:30:00Z"),
-      price: 6800,
-      availableSeats: 160,
-    },
-    {
-      flightNumber: "SG1233",
-      airlineCode: "SG",
-      departureCode: "BLR",
-      arrivalCode: "MAA",
-      departureTime: FIXED_DATES.DEC22_2PM,
-      arrivalTime: new Date("2025-12-22T16:15:00Z"),
-      price: 3800,
-      availableSeats: 85,
-    },
-    {
-      flightNumber: "UK1234",
-      airlineCode: "UK",
-      departureCode: "MAA",
-      arrivalCode: "HYD",
-      departureTime: FIXED_DATES.DEC22_6PM,
-      arrivalTime: new Date("2025-12-22T19:45:00Z"),
-      price: 4500,
-      availableSeats: 100,
-    },
-    {
-      flightNumber: "IX1235",
-      airlineCode: "IX",
-      departureCode: "HYD",
-      arrivalCode: "CCU",
-      departureTime: FIXED_DATES.DEC22_9PM,
-      arrivalTime: new Date("2025-12-22T23:15:00Z"),
-      price: 4000,
-      availableSeats: 75,
-    },
-
-    // December 25, 2025 - 5 flights
-    {
-      flightNumber: "AI1236",
-      airlineCode: "AI",
-      departureCode: "CCU",
-      arrivalCode: "AMD",
-      departureTime: FIXED_DATES.DEC25_6AM,
-      arrivalTime: new Date("2025-12-25T08:30:00Z"),
-      price: 5500,
-      availableSeats: 125,
-    },
-    {
-      flightNumber: "6E1237",
-      airlineCode: "6E",
-      departureCode: "AMD",
-      arrivalCode: "PNQ",
-      departureTime: FIXED_DATES.DEC25_9AM,
-      arrivalTime: new Date("2025-12-25T11:30:00Z"),
-      price: 4200,
-      availableSeats: 155,
-    },
-    {
-      flightNumber: "SG1238",
-      airlineCode: "SG",
-      departureCode: "PNQ",
-      arrivalCode: "COK",
-      departureTime: FIXED_DATES.DEC25_2PM,
-      arrivalTime: new Date("2025-12-25T16:15:00Z"),
-      price: 4800,
-      availableSeats: 80,
-    },
-    {
-      flightNumber: "UK1239",
-      airlineCode: "UK",
-      departureCode: "COK",
-      arrivalCode: "GOI",
-      departureTime: FIXED_DATES.DEC25_6PM,
-      arrivalTime: new Date("2025-12-25T19:30:00Z"),
-      price: 4500,
-      availableSeats: 95,
-    },
-    {
-      flightNumber: "G81240",
-      airlineCode: "G8",
-      departureCode: "GOI",
-      arrivalCode: "DEL",
-      departureTime: FIXED_DATES.DEC25_9PM,
-      arrivalTime: new Date("2025-12-25T22:45:00Z"),
-      price: 5800,
-      availableSeats: 105,
-    },
-
-    // December 28, 2025 - 5 flights
-    {
-      flightNumber: "AI1241",
-      airlineCode: "AI",
-      departureCode: "DEL",
-      arrivalCode: "BOM",
-      departureTime: FIXED_DATES.DEC28_6AM,
-      arrivalTime: new Date("2025-12-28T08:30:00Z"),
-      price: 5000,
-      availableSeats: 130,
-    },
-    {
-      flightNumber: "6E1242",
-      airlineCode: "6E",
-      departureCode: "BOM",
-      arrivalCode: "BLR",
-      departureTime: FIXED_DATES.DEC28_9AM,
-      arrivalTime: new Date("2025-12-28T12:30:00Z"),
-      price: 7200,
-      availableSeats: 160,
-    },
-    {
-      flightNumber: "SG1243",
-      airlineCode: "SG",
-      departureCode: "BLR",
-      arrivalCode: "MAA",
-      departureTime: FIXED_DATES.DEC28_2PM,
-      arrivalTime: new Date("2025-12-28T16:15:00Z"),
-      price: 4000,
-      availableSeats: 85,
-    },
-    {
-      flightNumber: "UK1244",
-      airlineCode: "UK",
-      departureCode: "MAA",
-      arrivalCode: "HYD",
-      departureTime: FIXED_DATES.DEC28_6PM,
-      arrivalTime: new Date("2025-12-28T19:45:00Z"),
-      price: 4500,
-      availableSeats: 100,
-    },
-    {
-      flightNumber: "IX1245",
-      airlineCode: "IX",
-      departureCode: "HYD",
-      arrivalCode: "CCU",
-      departureTime: FIXED_DATES.DEC28_9PM,
-      arrivalTime: new Date("2025-12-28T23:15:00Z"),
-      price: 4200,
-      availableSeats: 75,
-    },
-
-    // December 31, 2025 - 5 flights
-    {
-      flightNumber: "AI1246",
-      airlineCode: "AI",
-      departureCode: "CCU",
-      arrivalCode: "AMD",
-      departureTime: FIXED_DATES.DEC31_6AM,
-      arrivalTime: new Date("2025-12-31T08:30:00Z"),
-      price: 5800,
-      availableSeats: 140,
-    },
-    {
-      flightNumber: "6E1247",
-      airlineCode: "6E",
-      departureCode: "AMD",
-      arrivalCode: "PNQ",
-      departureTime: FIXED_DATES.DEC31_9AM,
-      arrivalTime: new Date("2025-12-31T11:30:00Z"),
-      price: 4500,
-      availableSeats: 165,
-    },
-    {
-      flightNumber: "SG1248",
-      airlineCode: "SG",
-      departureCode: "PNQ",
-      arrivalCode: "COK",
-      departureTime: FIXED_DATES.DEC31_2PM,
-      arrivalTime: new Date("2025-12-31T16:15:00Z"),
-      price: 5200,
-      availableSeats: 90,
-    },
-    {
-      flightNumber: "UK1249",
-      airlineCode: "UK",
-      departureCode: "COK",
-      arrivalCode: "GOI",
-      departureTime: FIXED_DATES.DEC31_6PM,
-      arrivalTime: new Date("2025-12-31T19:30:00Z"),
-      price: 4800,
-      availableSeats: 105,
-    },
-    {
-      flightNumber: "G81250",
-      airlineCode: "G8",
-      departureCode: "GOI",
-      arrivalCode: "DEL",
-      departureTime: FIXED_DATES.DEC31_9PM,
-      arrivalTime: new Date("2025-12-31T22:45:00Z"),
-      price: 6200,
-      availableSeats: 115,
-    },
+  // 15+ origin-destination pairs
+  const ROUTE_PAIRS: Array<{ from: string; to: string }> = [
+    { from: "DEL", to: "BOM" },
+    { from: "BOM", to: "DEL" },
+    { from: "DEL", to: "BLR" },
+    { from: "BLR", to: "DEL" },
+    { from: "BLR", to: "HYD" },
+    { from: "HYD", to: "BLR" },
+    { from: "MAA", to: "DEL" },
+    { from: "DEL", to: "MAA" },
+    { from: "CCU", to: "DEL" },
+    { from: "DEL", to: "CCU" },
+    { from: "BOM", to: "HYD" },
+    { from: "HYD", to: "BOM" },
+    { from: "AMD", to: "DEL" },
+    { from: "DEL", to: "AMD" },
+    { from: "PNQ", to: "DEL" },
   ];
+
+  // Five departure slots across December 2025
+  const DEC_DATES: Date[] = [
+    new Date("2025-12-01T06:00:00Z"),
+    new Date("2025-12-05T09:00:00Z"),
+    new Date("2025-12-08T14:00:00Z"),
+    new Date("2025-12-12T18:00:00Z"),
+    new Date("2025-12-15T21:00:00Z"),
+  ];
+
+  const durationMinutesFor = (pair: { from: string; to: string }): number => {
+    const medium = new Set([
+      "DEL-BLR",
+      "BLR-DEL",
+      "DEL-CCU",
+      "CCU-DEL",
+      "BOM-HYD",
+      "HYD-BOM",
+      "DEL-AMD",
+      "AMD-DEL",
+    ]);
+    const long = new Set(["DEL-GOI", "GOI-DEL"]);
+    const key = `${pair.from}-${pair.to}`;
+    if (medium.has(key)) return 150; // 2h30m
+    if (long.has(key)) return 180; // 3h
+    return 120; // 2h
+  };
+
+  // Deterministic generator ensuring 5 flights per route per date
+  (function appendGeneratedFlights() {
+    let serial = 2000; // Avoid collision with any legacy series
+    const airlineCodes = AIRLINES.map((a) => a.code);
+    const hourOffsets = [0, 3, 8, 12, 15]; // 6am, 9am, 2pm, 6pm, 9pm
+
+    for (const [pairIdx, pair] of ROUTE_PAIRS.entries()) {
+      for (let dateIdx = 0; dateIdx < DEC_DATES.length; dateIdx++) {
+        const baseDate = DEC_DATES[dateIdx];
+        if (!baseDate) continue;
+
+        // Generate 5 flights for this route+date combination
+        for (let flightIdx = 0; flightIdx < 5; flightIdx++) {
+          const departureTime = new Date(baseDate);
+          // Different departure times: 6am, 9am, 2pm, 6pm, 9pm
+          departureTime.setHours(departureTime.getHours() + (hourOffsets[flightIdx] ?? 0));
+
+          const minutes = durationMinutesFor(pair);
+          const arrivalTime = new Date(departureTime.getTime() + minutes * 60_000);
+
+          // Round-robin through airlines for variety
+          const airlineCode = airlineCodes[flightIdx % airlineCodes.length] ?? "AI";
+          const flightNumber = `${airlineCode}${serial++}`;
+
+          // Vary prices and seats for each flight
+          const basePrice = 3200 + ((pairIdx * 137 + dateIdx * 311 + flightIdx * 47) % 3000);
+          const price = Math.min(7200, Math.max(3200, basePrice));
+          const availableSeats = 85 + ((pairIdx * 17 + dateIdx * 29 + flightIdx * 13) % 80);
+
+          flightData.push({
+            flightNumber,
+            airlineCode,
+            departureCode: pair.from,
+            arrivalCode: pair.to,
+            departureTime,
+            arrivalTime,
+            price,
+            availableSeats,
+          });
+        }
+      }
+    }
+  })();
 
   // Create flights from the defined data
   for (const flightInfo of flightData) {
@@ -750,86 +255,13 @@ async function main() {
     }
   }
 
-  // Step 5: Create Test User
-  // Creates a single test user for booking functionality
-  console.log("👥 Creating test user...");
-  const testUser: User = await prisma.user.create({
-    data: {
-      email: "test@example.com",
-      firstName: "Test",
-      lastName: "User",
-      phone: "+91-9876543210",
-    },
-  });
-
-  // Step 6: Create Test Bookings
-  // Creates 3-4 confirmed upcoming bookings for the test user
-  console.log("🎫 Creating test bookings...");
-
-  // Create bookings for the first 4 flights (all upcoming)
-  const testBookings = [
-    {
-      flightIndex: 1, // 6E202 - Mumbai to Bangalore
-      passengerCount: 2,
-      seatNumbers: "15B,15C",
-      bookingRef: "BK00000002",
-    },
-    {
-      flightIndex: 2, // SG303 - Bangalore to Chennai
-      passengerCount: 1,
-      seatNumbers: "8D",
-      bookingRef: "BK00000003",
-    },
-    {
-      flightIndex: 3, // UK404 - Chennai to Hyderabad
-      passengerCount: 2,
-      seatNumbers: "20A,20B",
-      bookingRef: "BK00000004",
-    },
-  ];
-  for (const [i, bookingInfo] of testBookings.entries()) {
-    const flight = flights[bookingInfo.flightIndex];
-
-    if (!flight) {
-      console.warn(
-        `Flight at index ${bookingInfo.flightIndex} not found, skipping booking ${bookingInfo.bookingRef}`,
-      );
-      continue;
-    }
-
-    const totalPrice = flight.price * bookingInfo.passengerCount;
-
-    const booking: Booking = await prisma.booking.create({
-      data: {
-        userId: testUser.id,
-        flightId: flight.id,
-        bookingRef: bookingInfo.bookingRef,
-        status: BookingStatus.COMPLETED,
-        totalPrice,
-        bookingDate: new Date("2025-11-15T10:00:00Z"), // Fixed booking date
-        passengerCount: bookingInfo.passengerCount,
-        seatNumbers: bookingInfo.seatNumbers,
-      },
-    });
-
-    // Decrease available seats for the flight
-    await prisma.flight.update({
-      where: { id: flight.id },
-      data: { availableSeats: Math.max(0, flight.availableSeats - bookingInfo.passengerCount) },
-    });
-  }
-
-  // Step 7: Display completion summary
+  // Step 5: Display completion summary
   console.log("✅ Seed script completed successfully!");
   console.log(`📊 Created:`);
   console.log(`   - ${airports.length} airports`);
   console.log(`   - ${airlines.length} airlines`);
   console.log(`   - ${flights.length} flights`);
-  console.log(`   - 1 test user (test@example.com)`);
-  console.log(`   - ${testBookings.length} test bookings`);
   console.log("\n🎯 Ready for flight search and booking functionality!");
-  console.log("📋 Test user has bookings for 'My Trips' testing");
-  console.log("🔑 Test user email: test@example.com");
 }
 
 /**

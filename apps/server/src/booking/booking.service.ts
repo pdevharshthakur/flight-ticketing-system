@@ -91,11 +91,25 @@ export class BookingService {
 		const seatNumbers = this.generateSeatNumbers(passengerCount);
 
 		const booking = await this.prisma.$transaction(async (tx) => {
-			const updatedFlight = await tx.flight.update({
-				where: { id: flight.id },
+			// 1) Prevent duplicate bookings for the same user & flight
+			const already = await tx.booking.findFirst({
+				where: {
+					userId: user.id,
+					flightId: flight.id,
+					status: { in: ['CONFIRMED', 'COMPLETED'] },
+				},
+				include: { flight: { include: { airline: true, departure: true, arrival: true } } },
+			});
+			if (already) {
+				return already;
+			}
+
+			// 2) Atomically decrement seats only if enough are available (race-safe)
+			const seatUpdate = await tx.flight.updateMany({
+				where: { id: flight.id, availableSeats: { gte: passengerCount } },
 				data: { availableSeats: { decrement: passengerCount } },
 			});
-			if (updatedFlight.availableSeats < 0) {
+			if (seatUpdate.count !== 1) {
 				throw new BadRequestException('Not enough seats available');
 			}
 
